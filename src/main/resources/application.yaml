@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: name:spring-bankin-app
+  jpa:
+    show-sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/banking-api
+          jwk-set-uri: http://localhost:8180/realms/banking-api/protocol/openid-connect/certs
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bankingApi?createDatabaseIfNotExist=true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+keycloak:
+  auth-server-url: http://localhost:8180
+  realm: banking-api
+  default-role: USER
+  client-id: banking-api
+  client-secret: ${CLIENT_SECRET}
