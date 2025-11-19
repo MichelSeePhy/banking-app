@@ -1,10 +1,8 @@
 package springframework.springbankinapp.users;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
-import jakarta.ws.rs.DefaultValue;
 import lombok.*;
 import org.hibernate.annotations.*;
 import springframework.springbankinapp.customers.Customer;

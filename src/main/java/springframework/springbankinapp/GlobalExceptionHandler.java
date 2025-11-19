@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import springframework.springbankinapp.common.ErrorDto;
@@ -27,7 +26,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorDto> handleUserAlreadyExistsException(UserAlreadyExistsException ex) {
+    public ResponseEntity<ErrorDto> handleUserAlreadyExistsException() {
 
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorDto("Email already exists"));
@@ -61,7 +60,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCustomerNotFound(CustomerNotFoundException ex) {
+    public ResponseEntity<ErrorDto> handleCustomerNotFound() {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new ErrorDto("Customer not found"));
@@ -73,7 +72,9 @@ public class GlobalExceptionHandler {
 
         if (ex.getCause() instanceof InvalidFormatException ife) {
             if (ife.getTargetType().isEnum()) {
-                Class<? extends Enum> enumClass = (Class<? extends Enum>) ife.getTargetType();
+                @SuppressWarnings("unchecked")
+                Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) ife.getTargetType();
+
                 String enumName = enumClass.getSimpleName();
                 String allowedValues = Arrays.stream(enumClass.getEnumConstants())
                         .map(Enum::name)

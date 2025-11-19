@@ -13,9 +13,6 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-    private final KeycloakService keycloakService;
-
-
     public Jwt getCurrentJwt() {
         return (Jwt) SecurityContextHolder.getContext()
                 .getAuthentication()

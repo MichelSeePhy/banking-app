@@ -1,6 +1,5 @@
 package springframework.springbankinapp.customers;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import lombok.*;

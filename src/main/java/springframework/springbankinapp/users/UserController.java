@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import springframework.springbankinapp.auth.AuthService;
 
 import java.util.List;
 
@@ -14,7 +13,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final AuthService authService;
 
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(

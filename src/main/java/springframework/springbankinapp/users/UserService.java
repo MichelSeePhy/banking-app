@@ -130,9 +130,8 @@ public class UserService {
 
     @Transactional
     public void changeUserRole(Long userId, ChangeRoleRequest changeRoleRequest) {
-        User currentUser = getCurrentUser();
         var targetUser = getUser(userId);
-        if (!permissionService.canChangeRole(currentUser)) {
+        if (!permissionService.canChangeRole()) {
             throw new AccessDeniedException("You don't have permission to change role");
         }
 

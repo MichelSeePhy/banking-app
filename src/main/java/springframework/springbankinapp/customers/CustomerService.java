@@ -22,8 +22,7 @@ public class CustomerService {
 
     @Transactional
     public CustomerResponseDto createCustomer(CreateCustomerDto createCustomerDto) {
-        var email = authService.getCurrentUserEmail();
-        var currentUser = userService.getUserByEmail(email);
+        var currentUser = getCurrentUser();
 
         if (currentUser.getPrivateCustomer() != null && createCustomerDto.getType() == Type.PRIVATE) {
             throw new IllegalArgumentException("User already has a private customer");
@@ -42,20 +41,138 @@ public class CustomerService {
         return customerMapper.toCustomerResponseDto(customer);
     }
 
-
     @Transactional
     public CustomerResponseDto getCustomerById(Long customerId) {
-        var email = authService.getCurrentUserEmail();
-        var currentUser = userService.getUserByEmail(email);
+        var currentUser = getCurrentUser();
+        var customer = getCustomerWithAccessCheck(customerId, currentUser);
 
+        return customerMapper.toCustomerResponseDto(customer);
+    }
+
+    @Transactional
+    public void updateCustomer(Long customerId, UpdateCustomerDto updateRequest) {
+        var currentUser = getCurrentUser();
+        var customer = getCustomerWithAccessCheck(customerId, currentUser);
+
+        customerMapper.updateEntityFromDto(updateRequest, customer);
+    }
+
+    @Transactional
+    public void addMemberToOrgCustomer(Long customerId, @Valid AddMemberDto addMemberDto) {
+        var customer = getOrganizationCustomer(customerId);
+
+        var role = authService.getCurrentRole().orElseThrow();
+        if (!canManageMembers(role)) {
+            throw new AccessDeniedException("You don't have permission to add member to this organization");
+        }
+
+        if (customerRepository.existsByIdAndUsersId(customerId, addMemberDto.getUserId())) {
+            throw new IllegalArgumentException("User is already organization member");
+        }
+
+        var user = userRepository.getUserById(addMemberDto.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        user.getOrganizationCustomers().add(customer);
+    }
+
+    @Transactional
+    public void removeMemberFromOrganization(Long customerId, Long memberId) {
+        getOrganizationCustomer(customerId);
+
+        if (!canManageMembers(authService.getCurrentRole().orElseThrow())) {
+            throw new AccessDeniedException("You don't have permission to remove member from this organization");
+        }
+
+        if (!customerRepository.existsByIdAndUsersId(customerId, memberId)) {
+            throw new IllegalArgumentException("User is not a member of this organization");
+        }
+
+        if (customerRepository.countMembersByCustomerId(customerId) == 1) {
+            throw new IllegalArgumentException("Cannot remove last organization member");
+        }
+
+        customerRepository.removeUserFromCustomer(memberId, customerId);
+    }
+
+    @Transactional
+    public void deleteCustomer(Long customerId) {
         var customer = customerRepository.findById(customerId)
                 .orElseThrow(CustomerNotFoundException::new);
 
-        if (hasAccessToCustomer(currentUser, customer)) {
-            return customerMapper.toCustomerResponseDto(customer);
+        var role = authService.getCurrentRole().orElseThrow();
+
+        if (customer.getType() == Type.PRIVATE) {
+            deletePrivateCustomer(customer, role);
+        } else {
+            deleteOrganizationCustomer(customer, role);
+        }
+    }
+
+    public List<CustomerResponseDto> getAllCustomers(String name, Type type) {
+        var currentUser = getCurrentUser();
+        var role = authService.getCurrentRole().orElseThrow();
+
+        List<Customer> list;
+        if (role == Role.USER) {
+            Long privateCustomerId = currentUser.getPrivateCustomer() != null
+                    ? currentUser.getPrivateCustomer().getId()
+                    : null;
+            list = customerRepository.findCustomersForUser(currentUser.getId(), privateCustomerId, name, type);
+        } else {
+            list = customerRepository.findAllByQuery(name, type);
         }
 
-        throw new AccessDeniedException("You don't have permission to view this customer");
+        return customerMapper.toCustomerResponseList(list);
+    }
+
+
+    private User getCurrentUser() {
+        String email = authService.getCurrentUserEmail();
+        return userService.getUserByEmail(email);
+    }
+
+    private Customer getOrganizationCustomer(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(CustomerNotFoundException::new);
+
+        if (customer.getType() != Type.ORGANIZATION) {
+            throw new IllegalArgumentException("This operation is only available for organizations");
+        }
+
+        return customer;
+    }
+
+    private Customer getCustomerWithAccessCheck(Long customerId, User currentUser) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(CustomerNotFoundException::new);
+
+        if (!hasAccessToCustomer(currentUser, customer)) {
+            throw new AccessDeniedException("You don't have permission to view this customer");
+        }
+
+        return customer;
+    }
+
+    private void deletePrivateCustomer(Customer customer, Role role) {
+        var owner = userRepository.findByPrivateCustomerId(customer.getId())
+                .orElseThrow(UserNotFoundException::new);
+
+        var currentUserEmail = authService.getCurrentUserEmail();
+
+        if (!canDeletePrivateCustomer(currentUserEmail, owner, role)) {
+            throw new AccessDeniedException("You don't have permission to delete this customer");
+        }
+
+        owner.setPrivateCustomer(null);
+        userRepository.save(owner);
+    }
+
+    private void deleteOrganizationCustomer(Customer customer, Role role) {
+        if (role != Role.ADMIN) {
+            throw new AccessDeniedException("Only ADMIN can delete organizations");
+        }
+        customerRepository.delete(customer);
     }
 
     private boolean hasAccessToCustomer(User currentUser, Customer customer) {
@@ -69,124 +186,16 @@ public class CustomerService {
         );
     }
 
-    @Transactional
-    public void updateCustomer(Long customerId, UpdateCustomerDto updateRequest) {
-        var email = authService.getCurrentUserEmail();
-        var currentUser = userService.getUserByEmail(email);
-
-        var customer = customerRepository.findById(customerId)
-                .orElseThrow(CustomerNotFoundException::new);
-
-        if (!hasAccessToCustomer(currentUser, customer)) {
-            throw new AccessDeniedException("You don't have permission to update this customer");
-        }
-        customerMapper.updateEntityFromDto(updateRequest, customer);
-
-    }
-
-
-    @Transactional
-    public void addMemberToOrgCustomer(Long customerId, @Valid AddMemberDto addMemberDto) {
-
-        var customer = customerRepository.findById(customerId)
-                .orElseThrow(CustomerNotFoundException::new);
-        if (customer.getType() != Type.ORGANIZATION) {
-            throw new IllegalArgumentException("Cannot add member to private customer");
-        }
-        var user = userRepository.getUserById(addMemberDto.getUserId())
-                .orElseThrow(UserNotFoundException::new);
-
-        var role = authService.getCurrentRole().orElseThrow();
-        if (!canManageMembers(role)) {
-            throw new AccessDeniedException("You don't have permission to add member to this organization");
-        }
-
-        if (customerRepository.existsByIdAndUsersId(customerId, addMemberDto.getUserId())) {
-            throw new IllegalArgumentException("User is already organization member");
-        }
-
-        user.getOrganizationCustomers().add(customer);
-    }
-
     private boolean canManageMembers(Role role) {
         return role == Role.ADMIN || role == Role.MANAGER;
     }
-
-    @Transactional
-    public void removeMemberFromOrganization(Long customerId, Long memberId) {
-
-        var customer = customerRepository.findById(customerId)
-                .orElseThrow(CustomerNotFoundException::new);
-        if (customer.getType() != Type.ORGANIZATION) {
-            throw new IllegalArgumentException("Cannot remove member from private customer");
-        }
-        if (!canManageMembers(authService.getCurrentRole().orElseThrow())) {
-            throw new AccessDeniedException("You don't have permission to remove member from this organization");
-        }
-        if (!customerRepository.existsByIdAndUsersId(customerId, memberId)) {
-            throw new IllegalArgumentException("User is not a member of this organization");
-        }
-        if (customerRepository.countMembersByCustomerId(customerId) == 1) {
-            throw new IllegalArgumentException("Cannot remove last organization member");
-        }
-
-        customerRepository.removeUserFromCustomer(memberId, customerId);
-
-    }
-
-
-    @Transactional
-    public void deleteCustomer(Long customerId) {
-        var customer = customerRepository.findById(customerId)
-                .orElseThrow(CustomerNotFoundException::new);
-
-        var role = authService.getCurrentRole().orElseThrow();
-
-        if (customer.getType() == Type.PRIVATE) {
-            var owner = userRepository.findByPrivateCustomerId(customerId)
-                    .orElseThrow(UserNotFoundException::new);
-
-            var currentUserEmail = authService.getCurrentUserEmail();
-
-            if (!canDeletePrivateCustomer(currentUserEmail, owner, role)) {
-                throw new AccessDeniedException("You don't have permission to delete this customer");
-            }
-
-            owner.setPrivateCustomer(null);
-            userRepository.save(owner);
-
-        } else {
-            if (role != Role.ADMIN) {
-                throw new AccessDeniedException("Only ADMIN can delete organizations");
-            }
-            customerRepository.delete(customer);
-        }
-    }
-
 
     private boolean canDeletePrivateCustomer(String currentUserEmail, User owner, Role role) {
         return role == Role.ADMIN || role == Role.MANAGER
                 || currentUserEmail.equalsIgnoreCase(owner.getEmail());
     }
-
-    public List<CustomerResponseDto> getAllCustomers(String name, Type type) {
-        var email = authService.getCurrentUserEmail();
-        var currentUser = userService.getUserByEmail(email);
-
-        Long privateCustomerId = currentUser.getPrivateCustomer() != null
-                ? currentUser.getPrivateCustomer().getId()
-                : null;
-        List<Customer> list;
-        if (authService.getCurrentRole().orElseThrow() == Role.USER) {
-            list = customerRepository.findCustomersForUser(currentUser.getId(), privateCustomerId, name, type);
-        } else {
-            list = customerRepository.findAllByQuery(name, type);
-        }
-
-        return customerMapper.toCustomerResponseList(list);
-
-    }
 }
+
 
 
 

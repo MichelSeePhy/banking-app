@@ -86,7 +86,7 @@ public class PermissionService {
         return keycloakService.getUserRoleByEmail(targetUser.getEmail());
     }
 
-    public boolean canChangeRole(User user) {
+    public boolean canChangeRole() {
         Role currentRole = authService.getCurrentRole().orElseThrow();
 
         return currentRole == Role.ADMIN;
