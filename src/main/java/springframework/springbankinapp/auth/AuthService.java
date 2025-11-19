@@ -1,14 +1,20 @@
 package springframework.springbankinapp.auth;
 
-import org.springframework.security.core.Authentication;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import springframework.springbankinapp.users.Role;
 
-import java.util.*;
+import java.util.Optional;
 
+@RequiredArgsConstructor
 @Service
 public class AuthService {
+
+    private final KeycloakService keycloakService;
+
 
     public Jwt getCurrentJwt() {
         return (Jwt) SecurityContextHolder.getContext()
@@ -20,8 +26,13 @@ public class AuthService {
         return getCurrentJwt().getClaimAsString("email");
     }
 
-    public boolean isAdmin() {
+    public Optional<Role> getCurrentRole() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                .map(GrantedAuthority::getAuthority)
+                .map(Role::fromAuthority)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
     }
+
 }

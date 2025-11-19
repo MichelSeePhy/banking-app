@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class CreateUserRequest {
+public class CreateUserDto {
 
     @NotBlank(message = "First name is required")
     @Size(min = 1, max = 16)
@@ -18,7 +18,7 @@ public class CreateUserRequest {
     private String email;
 
     @NotBlank(message = "Phone number is required")
-    @Size(min = 8, max = 8)
+    @Size(min = 13, max = 13)
     private String phoneNumber;
 
     @NotBlank

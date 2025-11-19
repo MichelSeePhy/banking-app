@@ -32,6 +32,8 @@ public class KeycloakConfig {
                 .clientSecret(clientSecret)
                 .build();
 
+
+
         log.info("Keycloak client configured: serverUrl={}, realm={}, clientId={}",
                 authServerUrl, realm, clientId);
 

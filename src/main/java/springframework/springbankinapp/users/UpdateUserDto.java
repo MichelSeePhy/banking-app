@@ -1,15 +1,22 @@
 package springframework.springbankinapp.users;
 
-import lombok.Data;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
 @Data
-public class UserResponseDto {
+@Builder
+public class UpdateUserDto {
 
-    private Long id;
+    @Size(min = 1, max = 16)
     private String firstName;
+    @Size(min = 1, max = 16)
     private String lastName;
+    @Email
     private String email;
+    @Size(min = 13, max = 13)
     private String phoneNumber;
+
     private Boolean active;
+
 
 }

@@ -3,9 +3,10 @@ package springframework.springbankinapp.users;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
-import springframework.springbankinapp.common.ErrorDto;
+import springframework.springbankinapp.auth.AuthService;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -13,10 +14,11 @@ import springframework.springbankinapp.common.ErrorDto;
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(
-            @Valid @RequestBody CreateUserRequest user
+            @Valid @RequestBody CreateUserDto user
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(user));
     }
@@ -26,28 +28,47 @@ public class UserController {
         return userService.getUserById(userId);
     }
 
+    @PutMapping("/{userId}")
+    public ResponseEntity<?> updateUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody UpdateUserDto updateRequest) {
+        userService.updateUser(userId, updateRequest);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{userId}/{action}")
+    public ResponseEntity<?> setActiveForUser(
+            @PathVariable Long userId,
+            @PathVariable String action) {
+        userService.setActive(userId, action);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping()
+    public List<UserResponseDto> getAllUsers(
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String lastName,
+            @RequestParam(required = false) String firstName) {
+
+        return userService.getAllUsers(email, lastName, firstName);
+    }
+
+    @PostMapping("/{userId}/change-role")
+    public ResponseEntity<?> changePassword(
+            @PathVariable Long userId,
+            @RequestBody ChangeRoleRequest changeRoleRequest) {
+
+        userService.changeUserRole(userId,changeRoleRequest);
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorDto> handleDuplicateUser() {
-        return ResponseEntity.badRequest().body(
-                new ErrorDto("User already exists")
-        );
-    }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleNotFoundUser() {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorDto("User not found"));
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorDto> handleAccessDenied() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ErrorDto("Access denied"));
-    }
 }
