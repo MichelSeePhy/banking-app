@@ -21,3 +21,11 @@ keycloak:
   default-role: USER
   client-id: banking-api
   client-secret: ${CLIENT_SECRET}
+
+account:
+  defaults:
+    debit:
+      operation-limit: 1000
+    credit:
+      credit-limit: 5000
+      interest: 5

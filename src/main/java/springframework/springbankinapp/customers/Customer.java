@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
+import springframework.springbankinapp.accounts.Account;
 import springframework.springbankinapp.users.User;
 
 import java.time.LocalDateTime;
@@ -43,5 +44,8 @@ public class Customer {
 
     @ManyToMany(mappedBy = "organizationCustomers", fetch = FetchType.LAZY)
     private Set<User> users;
+
+    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY)
+    private Set<Account> accounts;
 
 }

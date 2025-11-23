@@ -22,7 +22,7 @@ public class CustomerService {
 
     @Transactional
     public CustomerResponseDto createCustomer(CreateCustomerDto createCustomerDto) {
-        var currentUser = getCurrentUser();
+        var currentUser = authService.getCurrentUser();
 
         if (currentUser.getPrivateCustomer() != null && createCustomerDto.getType() == Type.PRIVATE) {
             throw new IllegalArgumentException("User already has a private customer");
@@ -43,7 +43,7 @@ public class CustomerService {
 
     @Transactional
     public CustomerResponseDto getCustomerById(Long customerId) {
-        var currentUser = getCurrentUser();
+        var currentUser = authService.getCurrentUser();
         var customer = getCustomerWithAccessCheck(customerId, currentUser);
 
         return customerMapper.toCustomerResponseDto(customer);
@@ -51,7 +51,7 @@ public class CustomerService {
 
     @Transactional
     public void updateCustomer(Long customerId, UpdateCustomerDto updateRequest) {
-        var currentUser = getCurrentUser();
+        var currentUser = authService.getCurrentUser();
         var customer = getCustomerWithAccessCheck(customerId, currentUser);
 
         customerMapper.updateEntityFromDto(updateRequest, customer);
@@ -110,7 +110,7 @@ public class CustomerService {
     }
 
     public List<CustomerResponseDto> getAllCustomers(String name, Type type) {
-        var currentUser = getCurrentUser();
+        var currentUser = authService.getCurrentUser();
         var role = authService.getCurrentRole().orElseThrow();
 
         List<Customer> list;
@@ -126,11 +126,6 @@ public class CustomerService {
         return customerMapper.toCustomerResponseList(list);
     }
 
-
-    private User getCurrentUser() {
-        String email = authService.getCurrentUserEmail();
-        return userService.getUserByEmail(email);
-    }
 
     private Customer getOrganizationCustomer(Long customerId) {
         Customer customer = customerRepository.findById(customerId)

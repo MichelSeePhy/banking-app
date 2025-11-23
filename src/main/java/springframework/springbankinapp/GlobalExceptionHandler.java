@@ -6,8 +6,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import springframework.springbankinapp.accounts.*;
 import springframework.springbankinapp.common.ErrorDto;
 import springframework.springbankinapp.customers.CustomerNotFoundException;
+import springframework.springbankinapp.transactions.*;
 import springframework.springbankinapp.users.*;
 
 import java.util.*;
@@ -27,9 +29,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorDto> handleUserAlreadyExistsException() {
-
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ErrorDto("Email already exists"));
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ErrorDto> handleInsufficientFundsException() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto("Insufficient funds"));
+    }
+
+    @ExceptionHandler(OperationLimitExceededException.class)
+    public ResponseEntity<ErrorDto> handleOperationLimitExceededException() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto("Operation limit exceeded"));
+    }
+
+    @ExceptionHandler(CreditLimitExceededException.class)
+    public ResponseEntity<ErrorDto> handleCreditLimitExceededException() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto("Credit limit exceeded"));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
@@ -60,10 +79,59 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
-    public ResponseEntity<ErrorDto> handleCustomerNotFound() {
+    public ResponseEntity<ErrorDto> handleCustomerNotFound(CustomerNotFoundException ex) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorDto("Customer not found"));
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountTypeMismatchException.class)
+    public ResponseEntity<ErrorDto> handleAccountTypeMismatch(AccountTypeMismatchException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountBalanceNotZeroException.class)
+    public ResponseEntity<ErrorDto> handleAccountBalanceNotZero(AccountBalanceNotZeroException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountAlreadyInStatusException.class)
+    public ResponseEntity<ErrorDto> handleAccountAlreadyInStatus(AccountAlreadyInStatusException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ErrorDto> handleAccountNotFound(AccountNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ClosedAccountCannotBeModifiedException.class)
+    public ResponseEntity<ErrorDto> handleClosedAccountCannotBeModified(ClosedAccountCannotBeModifiedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ErrorDto> handleInvalidAccountStatusTransition(InvalidStatusTransitionException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<ErrorDto> handleAccountNotActive(AccountNotActiveException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorDto(ex.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

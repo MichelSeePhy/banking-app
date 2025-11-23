@@ -56,7 +56,7 @@ public class UserService {
 
     @Transactional
     public void updateUser(Long userId, UpdateUserDto updateRequest) {
-        User currentUser = getCurrentUser();
+        User currentUser = authService.getCurrentUser();
         User userToUpdate = getUser(userId);
 
         if (!permissionService.canUpdateUser(currentUser, userToUpdate)) {
@@ -68,14 +68,8 @@ public class UserService {
         userRepository.save(userToUpdate);
     }
 
-    private User getCurrentUser() {
-        String currentUserEmail = authService.getCurrentUserEmail();
-        return userRepository.findUserByEmail(currentUserEmail)
-                .orElseThrow(UserNotFoundException::new);
-    }
-
     public UserResponseDto getUserById(Long userId) {
-        User currentUser = getCurrentUser();
+        User currentUser = authService.getCurrentUser();
         User targetUser = getUser(userId);
         if (!permissionService.canViewUser(currentUser, targetUser)) {
             throw new AccessDeniedException("You don't have permission to view this user");
@@ -86,7 +80,7 @@ public class UserService {
 
     @Transactional
     public void setActive(Long userId, String action) {
-        User currentUser = getCurrentUser();
+        User currentUser = authService.getCurrentUser();
         User userToUpdate = getUser(userId);
         Boolean requestedActiveStatus = switch (action) {
             case "activate" -> true;
@@ -105,7 +99,7 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long userId) {
-        User currentUser = getCurrentUser();
+        User currentUser = authService.getCurrentUser();
         var targetUser = getUser(userId);
         if (!permissionService.canDeleteUser(currentUser, targetUser)) {
             throw new AccessDeniedException("You don't have permission to delete this user");
