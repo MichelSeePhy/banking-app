@@ -1,9 +1,9 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.repositories;
 
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import springframework.springbankinapp.customers.Customer;
+import springframework.springbankinapp.users.entities.User;
 
 import java.util.*;
 

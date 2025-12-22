@@ -1,8 +1,12 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import springframework.springbankinapp.auth.*;
+import springframework.springbankinapp.users.entities.User;
+import springframework.springbankinapp.users.Role;
+import springframework.springbankinapp.users.exceptions.UserNotFoundException;
+import springframework.springbankinapp.users.repositories.UserRepository;
 
 @Service
 @RequiredArgsConstructor

@@ -5,7 +5,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import springframework.springbankinapp.users.*;
+import springframework.springbankinapp.users.entities.User;
+import springframework.springbankinapp.users.Role;
+import springframework.springbankinapp.users.exceptions.UserNotFoundException;
+import springframework.springbankinapp.users.repositories.UserRepository;
 
 import java.util.Optional;
 

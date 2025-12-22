@@ -40,4 +40,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             @Param("name") String name,
             @Param("type") Type type
     );
+
 }

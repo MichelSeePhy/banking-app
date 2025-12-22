@@ -1,4 +1,4 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.entities;
 
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;

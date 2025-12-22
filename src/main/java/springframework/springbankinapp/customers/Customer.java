@@ -5,7 +5,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 import org.hibernate.annotations.*;
 import springframework.springbankinapp.accounts.Account;
-import springframework.springbankinapp.users.User;
+import springframework.springbankinapp.users.entities.User;
 
 import java.time.LocalDateTime;
 import java.util.Set;

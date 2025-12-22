@@ -1,4 +1,4 @@
-package springframework.springbankinapp;
+package springframework.springbankinapp.accounts;
 
 public class AccountBalanceNotZeroException extends RuntimeException {
     public AccountBalanceNotZeroException() {

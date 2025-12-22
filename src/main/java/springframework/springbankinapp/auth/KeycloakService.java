@@ -8,7 +8,9 @@ import org.keycloak.admin.client.resource.*;
 import org.keycloak.representations.idm.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import springframework.springbankinapp.users.*;
+import springframework.springbankinapp.users.Role;
+import springframework.springbankinapp.users.dtos.*;
+import springframework.springbankinapp.users.exceptions.*;
 
 import java.util.*;
 
@@ -88,9 +90,9 @@ public class KeycloakService {
 
         UserResource userResource = usersResource.get(user.getId());
 
-        try{
+        try {
             userResource.update(user);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new UserAlreadyExistsException();
         }
     }
@@ -106,7 +108,7 @@ public class KeycloakService {
         log.info("Assigned USER role to user: {}", userId);
     }
 
-    public void changeUserRole(String userId, String oldRole,String newRole) {
+    public void changeUserRole(String userId, String oldRole, String newRole) {
         RealmResource realmResource = keycloak.realm(realm);
         UserResource userResource = realmResource.users().get(userId);
 
@@ -136,6 +138,7 @@ public class KeycloakService {
             log.info("Deleted Keycloak user: {}", keycloakUserId);
         } catch (Exception e) {
             log.warn("Failed to delete Keycloak user {}: {}", keycloakUserId, e.getMessage());
+            throw new RuntimeException("Failed to delete user from Keycloak", e.getCause());
         }
     }
 
@@ -160,4 +163,15 @@ public class KeycloakService {
                 .orElseThrow();
     }
 
+    public void revertUser(String keycloakUserId, String previousEmail, String previousFirstName, String previousLastName) {
+
+        UserResource userResource = keycloak.realm(realm).users().get(keycloakUserId);
+        UserRepresentation user = userResource.toRepresentation();
+        user.setUsername(previousEmail);
+        user.setEmail(previousEmail);
+        user.setFirstName(previousFirstName);
+        user.setLastName(previousLastName);
+
+        userResource.update(user);
+    }
 }

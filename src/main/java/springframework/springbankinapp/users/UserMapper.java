@@ -1,6 +1,8 @@
 package springframework.springbankinapp.users;
 
 import org.mapstruct.*;
+import springframework.springbankinapp.users.dtos.*;
+import springframework.springbankinapp.users.entities.User;
 
 import java.util.List;
 

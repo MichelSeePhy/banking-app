@@ -1,4 +1,4 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.dtos;
 
 import jakarta.validation.constraints.*;
 import lombok.*;

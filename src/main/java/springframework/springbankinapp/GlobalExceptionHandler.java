@@ -10,7 +10,7 @@ import springframework.springbankinapp.accounts.*;
 import springframework.springbankinapp.common.ErrorDto;
 import springframework.springbankinapp.customers.CustomerNotFoundException;
 import springframework.springbankinapp.transactions.*;
-import springframework.springbankinapp.users.*;
+import springframework.springbankinapp.users.exceptions.*;
 
 import java.util.*;
 import java.util.stream.Collectors;

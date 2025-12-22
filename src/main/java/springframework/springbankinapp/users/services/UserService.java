@@ -1,12 +1,18 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.*;
 import springframework.springbankinapp.auth.*;
+import springframework.springbankinapp.users.UserMapper;
+import springframework.springbankinapp.users.dtos.*;
+import springframework.springbankinapp.users.entities.User;
+import springframework.springbankinapp.users.events.*;
+import springframework.springbankinapp.users.exceptions.*;
+import springframework.springbankinapp.users.repositories.UserRepository;
 
 import java.util.List;
 
@@ -20,6 +26,8 @@ public class UserService {
     private final KeycloakService keycloakService;
     private final AuthService authService;
     private final PermissionService permissionService;
+    private final ApplicationEventPublisher publisher;
+
 
     @Transactional
     public UserResponseDto createUser(CreateUserDto request) {
@@ -28,6 +36,7 @@ public class UserService {
         });
 
         String keycloakUserId = keycloakService.createUser(request);
+        publisher.publishEvent(new KeycloakUserCreatedEvent(keycloakUserId));
 
         var userDetails = new User();
         userDetails.setFirstName(request.getFirstName());
@@ -36,20 +45,8 @@ public class UserService {
         userDetails.setPhoneNumber(request.getPhoneNumber());
         userDetails.setKeycloakUserId(keycloakUserId);
 
-
         var savedUser = userRepository.save(userDetails);
 
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCompletion(int status) {
-                        if (status == STATUS_ROLLED_BACK) {
-                            log.warn("Transaction rolled back, deleting Keycloak user: {}", keycloakUserId);
-                            keycloakService.deleteUser(keycloakUserId);
-                        }
-                    }
-                }
-        );
 
         return userMapper.toUserResponseDto(savedUser);
     }
@@ -64,7 +61,13 @@ public class UserService {
         }
 
         keycloakService.updateUser(userToUpdate.getEmail(), updateRequest);
+        publisher.publishEvent(new KeycloakUserUpdatedEvent(userToUpdate.getKeycloakUserId(),
+                userToUpdate.getEmail(),
+                userToUpdate.getFirstName(),
+                userToUpdate.getLastName()));
+
         userMapper.update(updateRequest, userToUpdate);
+
         userRepository.save(userToUpdate);
     }
 
@@ -106,7 +109,6 @@ public class UserService {
         }
         userRepository.delete(targetUser);
         keycloakService.deleteUser(targetUser.getKeycloakUserId());
-
     }
 
     private User getUser(Long userId) {
@@ -139,11 +141,6 @@ public class UserService {
                 changeRoleRequest.getNewRole().name()
         );
 
-    }
-
-    public User getUserByEmail(String email) {
-        return userRepository.findUserByEmail(email)
-                .orElseThrow(UserNotFoundException::new);
     }
 }
 

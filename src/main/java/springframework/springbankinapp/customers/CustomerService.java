@@ -6,7 +6,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import springframework.springbankinapp.auth.AuthService;
-import springframework.springbankinapp.users.*;
+import springframework.springbankinapp.users.entities.User;
+import springframework.springbankinapp.users.Role;
+import springframework.springbankinapp.users.exceptions.UserNotFoundException;
+import springframework.springbankinapp.users.repositories.UserRepository;
+import springframework.springbankinapp.users.services.UserService;
 
 import java.util.List;
 

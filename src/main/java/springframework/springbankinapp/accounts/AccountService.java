@@ -5,10 +5,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import springframework.springbankinapp.*;
 import springframework.springbankinapp.auth.AuthService;
 import springframework.springbankinapp.customers.*;
 import springframework.springbankinapp.users.*;
+import springframework.springbankinapp.users.Role;
 
 import java.math.BigDecimal;
 import java.util.*;

@@ -1,4 +1,4 @@
-package springframework.springbankinapp;
+package springframework.springbankinapp.accounts;
 
 public class InvalidStatusTransitionException extends RuntimeException {
     public InvalidStatusTransitionException() {

@@ -1,9 +1,11 @@
-package springframework.springbankinapp.users;
+package springframework.springbankinapp.users.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import springframework.springbankinapp.users.dtos.*;
+import springframework.springbankinapp.users.services.UserService;
 
 import java.util.List;
 
