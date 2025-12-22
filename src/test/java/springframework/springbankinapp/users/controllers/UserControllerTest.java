@@ -34,7 +34,6 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /users - should create user and return 201 CREATED")
     void createUserShouldReturnCreated() throws Exception {
-        // Given
         CreateUserDto request = new CreateUserDto();
         request.setEmail("test@email.com");
         request.setFirstName("Test");
@@ -48,7 +47,6 @@ class UserControllerTest {
 
         when(userService.createUser(any(CreateUserDto.class))).thenReturn(response);
 
-        // When & Then
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
