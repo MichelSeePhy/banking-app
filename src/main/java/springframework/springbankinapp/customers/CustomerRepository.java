@@ -4,21 +4,15 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.*;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     boolean existsByIdAndUsersId(Long id, Long usersId);
 
-    @Query("SELECT COUNT(u) FROM User u JOIN u.organizationCustomers c WHERE c.id = :customerId")
-    int countMembersByCustomerId(@Param("customerId") Long customerId);
-
-    @Modifying
-    @Query(value = "DELETE FROM user_customer WHERE user_id = :userId AND customer_id = :customerId",
-            nativeQuery = true)
-    void removeUserFromCustomer(@Param("userId") Long userId,
-                                @Param("customerId") Long customerId);
+    @Query("SELECT c FROM Customer c LEFT JOIN FETCH c.users WHERE c.id = :id AND c.type = 'ORGANIZATION'")
+    Optional<Customer> findOrganizationCustomerById(@Param("id") Long id);
 
     @Query("SELECT c FROM Customer c WHERE " +
             "(:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +

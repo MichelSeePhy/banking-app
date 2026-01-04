@@ -29,3 +29,7 @@ account:
     credit:
       credit-limit: 5000
       interest: 5
+
+scheduler:
+  interest-charge:
+    cron: ${CRON_INTEREST_CHARGE:0 0 0 * * *}

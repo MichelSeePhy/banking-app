@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import springframework.springbankinapp.accounts.*;
 
 import java.math.*;
-import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Component
@@ -16,12 +15,14 @@ public class InterestChargeScheduler {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    @Scheduled(cron = "0 0 0 * * *")
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    private static final BigDecimal DAYS_IN_YEAR = BigDecimal.valueOf(365);
+    private static final BigDecimal DAILY_RATE_DIVISOR = HUNDRED.multiply(DAYS_IN_YEAR);
+
+    @Scheduled(cron = "${scheduler.interest-charge.cron}")
     @Transactional
     public void chargeInterest() {
-        System.out.println("=== Interest charge started at " + LocalDateTime.now() + " ===");
         var accounts = accountRepository.findAllAccountsForInterestCharge(Status.ACTIVE, Type.CREDIT);
-        System.out.println("Found " + accounts.size() + " accounts");
         accounts.forEach(this::processInterestCharge);
 
     }
@@ -29,8 +30,7 @@ public class InterestChargeScheduler {
     private void processInterestCharge(Account account) {
         BigDecimal dailyInterest = account.getBalance().abs()
                 .multiply(BigDecimal.valueOf(account.getInterest()))
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP)
-                .divide(BigDecimal.valueOf(365), 2, RoundingMode.HALF_UP);
+                .divide(DAILY_RATE_DIVISOR, 2, RoundingMode.HALF_UP);
 
         BigDecimal newBalance = account.getBalance().subtract(dailyInterest);
         account.setBalance(newBalance);

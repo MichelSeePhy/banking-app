@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import springframework.springbankinapp.auth.AuthService;
-import springframework.springbankinapp.users.entities.User;
 import springframework.springbankinapp.users.Role;
+import springframework.springbankinapp.users.entities.User;
 import springframework.springbankinapp.users.exceptions.UserNotFoundException;
 import springframework.springbankinapp.users.repositories.UserRepository;
 import springframework.springbankinapp.users.services.UserService;
@@ -82,21 +82,25 @@ public class CustomerService {
 
     @Transactional
     public void removeMemberFromOrganization(Long customerId, Long memberId) {
-        getOrganizationCustomer(customerId);
+        Customer orgCustomer = customerRepository.findOrganizationCustomerById(customerId)
+                .orElseThrow(CustomerNotFoundException::new);
 
         if (!canManageMembers(authService.getCurrentRole().orElseThrow())) {
             throw new AccessDeniedException("You don't have permission to remove member from this organization");
         }
 
-        if (!customerRepository.existsByIdAndUsersId(customerId, memberId)) {
+        if (orgCustomer.getUsers().stream().noneMatch(u -> u.getId().equals(memberId))) {
             throw new IllegalArgumentException("User is not a member of this organization");
         }
 
-        if (customerRepository.countMembersByCustomerId(customerId) == 1) {
+        if (orgCustomer.getUsers().size() == 1) {
             throw new IllegalArgumentException("Cannot remove last organization member");
         }
 
-        customerRepository.removeUserFromCustomer(memberId, customerId);
+        User user = userRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        user.getOrganizationCustomers().removeIf(c -> c.getId().equals(customerId));
     }
 
     @Transactional
