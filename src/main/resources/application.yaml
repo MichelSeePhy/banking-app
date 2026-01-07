@@ -1,6 +1,6 @@
 spring:
   application:
-    name: name:spring-bankin-app
+    name: spring-banking-app
   jpa:
     show-sql: true
   security:
@@ -9,6 +9,12 @@ spring:
         jwt:
           issuer-uri: http://localhost:8180/realms/banking-api
           jwk-set-uri: http://localhost:8180/realms/banking-api/protocol/openid-connect/certs
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: ${MQ_USER}
+    password: ${MQ_PASSWORD}
+  jms:
+    pub-sub-domain: false
 
   datasource:
     url: jdbc:mysql://localhost:3306/bankingApi?createDatabaseIfNotExist=true
@@ -33,3 +39,4 @@ account:
 scheduler:
   interest-charge:
     cron: ${CRON_INTEREST_CHARGE:0 0 0 * * *}
+

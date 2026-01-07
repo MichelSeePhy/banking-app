@@ -2,11 +2,14 @@ package springframework.springbankinapp.transactions;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import springframework.springbankinapp.accounts.*;
+import springframework.springbankinapp.transactions.events.TransactionTopUpEvent;
 import springframework.springbankinapp.users.UserAccessContextProvider;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final UserAccessContextProvider contextProvider;
     private final TransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void topUp(TopUpRequest request) {
@@ -36,6 +40,7 @@ public class TransactionService {
         );
 
         transactionRepository.save(transaction);
+        eventPublisher.publishEvent(new TransactionTopUpEvent(targetAccount.getNumber(), TransactionType.TOP_UP.name(), request.getAmount()));
     }
 
     @Transactional
@@ -120,5 +125,9 @@ public class TransactionService {
                         context.privateCustomerId(),
                         context.organizationCustomerIds())
                 .orElseThrow(AccountNotFoundException::new);
+    }
+
+    public List<TransactionSummary> getAllTransactions() {
+        return transactionRepository.findAllTransactionsBy();
     }
 }

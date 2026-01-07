@@ -16,8 +16,8 @@ public class KeycloakRollbackListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
     public void handleCreationRollback(KeycloakUserCreatedEvent event) {
-        log.warn("Rollback detected, deleting Keycloak user: {}", event.getKeycloakUserId());
-        keycloakService.deleteUser(event.getKeycloakUserId());
+        log.warn("Rollback detected, deleting Keycloak user: {}", event.keycloakUserId());
+        keycloakService.deleteUser(event.keycloakUserId());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
